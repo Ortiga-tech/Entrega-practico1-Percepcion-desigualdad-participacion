@@ -1,0 +1,152 @@
+---
+title: "Percepción de desigualdad económica y participación política en Chile"
+author: "Kamila Jorquera Marín - Diana Bustamante"
+date: "2026-04-06"
+editor: visual
+format: html
+lang: es
+toc: true
+embed-resources: true
+theme: darkly
+css: estilis.css
+bibliography: Referencia.bib 
+link-citations: true
+project:
+  output-dir: docs
+---
+
+```{r}
+pacman::p_load(sjlabelled,
+               dplyr, #Manipulacion de datos
+              stargazer, #Tablas
+              sjmisc, # Tablas
+              summarytools, # Tablas
+              kableExtra, #Tablas
+              sjPlot, #Tablas y gráficos
+              corrplot, # Correlaciones
+              sessioninfo, # Información de la sesión de trabajo
+              ggplot2,
+              haven) # Para la mayoría de los gráficos
+```
+
+```{r}
+setwd("C:/Users/ALUMNO/OneDrive - Universidad Alberto Hurtado/Desktop/Practico1 Quarto-Zero") 
+DS <- read_dta("ELSOC_Long_2016_2023.dta")
+
+#| label: setup
+#| include: false
+
+knitr::opts_chunk$set(
+  fig.path = "output/graphs/",
+  dpi = 300
+)
+
+```
+
+![](imagen/Ruber-Osoria.-Chile-protestas-octubre-2019-4.jpg)
+
+# 1. Intrducción
+
+En las últimas décadas, la desigualdad económica ha sido uno de los temas centrales del debate públicio en Chile. A pesar del crecimiento económico sostenido, distintos estudios muestran que las brechas socioeconómicas continúan siendo altas y que una parte importante de la población percibe la distribución de los ingresos como injusta. Estas percepciones no solo tienen consecuencias económicas, sino también sociales y políticas, ya que pueden influir en la forma en que los individuos se relacionan con el sistema político y participan en la vida pública.
+
+Desde la sociología, las percepciones de desigualdad son relevantes porque influyen en las actitudes políticas, la confianza institucional y las formas de participación social. Cuando las personas perciben altos niveles de desigualdad o injusticia distributiva, pueden desarrollar mayores niveles de desconcierto o motivación para participar políticamente.
+
+La literatura sociológica ha destacado que la percepción de desigualdad puede afectar diversas dimensiones de la vida social. Por ejemplo, estudios sobre estratificación social señalan que las desigualdades percibidas pueden influir en la legitimidad del orden social. Desde una postura weberiana, las acciones sociales y las relaciones entre actores se orientan en función de representaciones compartidas acerca de lo que se considera un orden legítimo. En este sentido, como señala @nikolakakis2024, Weber plantea que las acciones sociales están condicionadas por actores que se basan en representaciones o Vorstellung de aquello que se percibe como un orden legítimo.
+
+Desde otra perspectiva, investigaciones sobre justicia distributiva muestran que las evaluaciones subjetivas sobre la desigualdad pueden generar demandas por una mayor intervencion estatal. En particular cuando los individuos perciben que la distribución de recursos es injusta, tienden a expresar mayores niveles de apoyo a políticas redistributivas y a movilizarse colectivamente para demandar cambios institucionales. @fransman_relative_2024.
+
+Así mismo, estudios empíricos en sociología política han encontrado que la percepción de desigualdad puede aumentar la probabilidad de participación política, especialmente en contextos de movilización social. En este sentido, los análisis generacionales muestran que las diferencias en experiencias sociales y trayectorias biográficas influyen en las formas en que distintod grupos etáreos se vinculan con la protesta y la participación política, particularmente en acciones como marchas o manifestaciones públicas @moralesquiroga2018
+
+En este estudio se entenderá percepción de desigualdad económica como la evaluación subjetiva que realizan los individuos sobre cuán justa o unjusta es la distribución de los ingresos en la sociedad. Este concepto se distingue de la desigualdad objetiva, ya que se refiere a interpretaciones individuales del orden social y no necesariamente a indicadores económicos agregados.
+
+A partir de lo anterior, este trabajo propone la hipótesis de que a mayor percepción de desigualdad económica, mayor es la probabilidad de participación política a través de marchas o protestas. Para analizar esta relación se utilizarán los datos del Estudio Longitudinal Social de Chile (ELSOC) desarrollado por el Centro de Estudios de Conflicto y Cohesión Social (COES). Esta encuesta longitudinal recoge información sobre percepciiones sociales, actitudes políticas y condiciones socioeconómicas de la población chilena.
+
+## 2. Datos y variables
+
+Para analizar esta relación se utilizarán datos de ELSOC. La variable dependiente será la de Participación Política, medida a través de la frecuencia de asistencia a marchas o manifestaciones pacíficas (c08_02). La variable independiente será la percepción de desigualdad económica, operacionalizada mediante el grado de acuerdo con la afirmación "las diferencias de ingresos son demasiado grandes" (c18_11). Además, se incorporarán las variables de control como la edad (m0_edad) y el sexo (m0_sexo), con el objetivo de aislar mejor la relación entre desigualdad percibida y participación política.
+
+```{r}
+data <- DS %>%
+  dplyr::select(c08_02, c18_11, m0_edad, m0_sexo) %>%
+  dplyr::mutate(
+    c08_02 = as.numeric(c08_02),
+    c18_11 = as.numeric(c18_11),
+    m0_edad = as.numeric(m0_edad),
+    m0_sexo = as.numeric(m0_sexo)
+  )
+data <- DS %>%
+  select(c08_02, c18_11, m0_edad, m0_sexo)
+
+#| label: tbl-sjmisc
+#| tbl-cap: "Descriptivos con sjmisc"
+
+sjmisc::descr(data,
+        show = c("label","range", "mean", "sd", "NA.prc", "n"))%>% # Selecciona estadísticos
+        kable(.,"markdown") 
+
+```
+
+## 3. Resultados
+
+### 3.1 Percepción de desigualdad y participación política
+
+El gráfico muestra la relación entre la desigualdad económica y la participación en marchas o manifestaciones pacíficas. Se observa que, a medida que aumenta el nivel de acuerdo con la afirmación de que las diferencias de ingresos en Chile son demasiado grandes, aumenta también la proporción de individuos que declaran haber participado en marchas o protestas. Este patrón sugiere que las percepciones subjetivas de desigualdad pueden actuar como un factor que moviliza la participación política, especialmente en formas de acción colectiva como la protesta. Desde una perspectiva sociológica, esto puede interpretarse en el marco de las teorías de movilización política, como el artículo de @fransman_relative_2024, donde la percepción de injusticia o desigualdad funciona como un elemento que incentiva la acción colectiva y la expresión de demnadas sociales.
+
+```{r}
+#| label: fig-relacion
+#| fig-cap: "Gráfico 1. Percepción de desigualdad y participación en marchas"
+#| fig-align: center
+#| out-width: 80%
+
+ggplot(data, aes(x = factor(c18_11), fill = factor(c08_02))) +
+  geom_bar(position = "fill") +
+  labs(
+    x = "Percepción de desigualdad",
+    y = "Proporción",
+    fill = "Participación en marchas"
+  ) +
+  theme_minimal()
+```
+
+### 3.2 Perceprción de desigualdad según sexo
+
+El gráfico muestra la distribución de la percepción de desigualdad económica entre hombres y mujeres. En términos generales, se observa que ambos grupos presentan niveles relativamente altos de acuerdo con la afirmación de que las diferencias de ingresos en Chile son demasiado grandes, lo que sugiere que la percepción de desigualdad constirtuye un diagnóstico ampliamente compartido en la sociedad chilena. Sin embargo, pueden observarse algunas variaciones en la distribución entre hombres y mujeres, lo que podría estar relacionado con las distintas experiencias sociales y posiciones estructurales que ocupan ambos grupos. Desde la sociología de la desigualdad, estas diferencias pueden interpretarse considerando que las trayectorias laborales, las brechas salariales de género y la desigual distribución del trabajo doméstico y la crianza, pueden influir en cómo distintos grupos perciben las desigualdades económicas.
+
+```{r}
+#| label: fig-desigualdad-sexo #| fig-cap: "Gráfico 2. Percepción de desigualdad económica según sexo" #| fig-align: center #| out-width: 80%
+
+ggplot(data, aes(x = factor(c18_11), fill = factor(m0_sexo))) + geom_bar(position = "fill") + labs( x = "Percepción de desigualdad", y = "Proporción", fill = "Sexo" ) + theme_minimal()
+
+```
+
+### 3.3 Participación política según sexo
+
+El gráfico presenta la participación en marchas o manifestaciones pacíficas según sexo. La comparación permite observar si existen diferencias en los niveles de participación política enrte hombres y mujeres. Desde una mirada sociológica, este tipo de análisis resulta relevante porque la participación política no se distribuye de manera homogénea en la población, sino que suele estar influida por factores estructurales y sociodemográficos. En este sentido, las diferencias observadas podrían relacionarse con distintos niveles de socialización política, oportunidades de participación o experiencias sociales que influyen en la disposición a involucrarse en acciones colectivas.
+
+```{r}
+ #| label: fig-sexo #| fig-cap: "Gráfico 3. Participación en marchas según sexo" #| fig-align: center #| out-width: 80%
+
+ggplot(data, aes(x = factor(m0_sexo), fill = factor(c08_02))) + geom_bar(position = "fill") + labs( x = "Sexo", y = "Proporción", fill = "Participación en marchas" ) + theme_minimal()
+```
+
+### 3.4 Participación política según sexo y edad
+
+El gráfico muestra la relación entre edad, sexo y participación en marchas o manifestaciones pacíficas. La separación por sexo permite observar posibles diferencias en los patrones de participación política entre hombres y mujeres a lo largo del ciclo de vida. En términos generales, este tipo de visualización permite identificar si ciertos grupos etarios presentan mayores niveles de participación en acciones de protesta. Desde la sociología política, estas diferencias pueden interpretarse en relación con procesos de socialización política y experiencias generacionales, ya que distintos grupos de edad tienden a involucrarse de manera diferenciada en formas de participación no institucionalizadas como las marchas o manifestaciones.
+
+```{r}
+#| label: fig-participacion-sexo-edad #| fig-cap: "Gráfico 4. Participación en marchas según sexo y edad" #| fig-align: center #| out-width: 80%
+
+ggplot(data, aes(x = m0_edad, fill = factor(c08_02))) + geom_histogram(position = "identity", alpha = 0.5, bins = 20) + facet_wrap(~ m0_sexo) + labs( x = "Edad", y = "Frecuencia", fill = "Participación en marchas" ) + theme_minimal()
+```
+
+## 4. Conclusión
+
+El presente trabajo tuvo como objetivo analizar la relación entre la percepción de desigualdad económica y la participación política en Chile, utilizando datos del Estudio Longitudinal Social de Chile (ELSOC). Desde una perspectiva sociológica, este análisis permite comprender cómo las interpretaciones subjetivas que los individuos realizan sobre la distribución de los recursos en la sociedad influyen en sus orientaciones de acción y en sus formas de involucramiento político.
+
+Los resultados descriptivos sugieren que una mayor percepción de desigualdad económica se encuentra asociada con mayores niveles de participación en marchas o manifestaciones pacíficas. Este hallazgo resulta consistente con la literatura sociológica que plantea que las percepciones de injusticia distributiva pueden actuar como un elemento movilizador de la acción colectiva. En este sentido, las percepciones subjetivas de desigualdad no solo reflejan condiciones estructurales de la sociedad, sino que también configuran interpretaciones sobre la legitimidad del orden social existente.
+
+Desde una perspectiva weberiana, las acciones sociales se orientan en función de las representaciones que los individuos construyen sobre la realidad social y sobre aquello que consideran un orden legítimo. Cuando las desigualdades económicas son percibidas como excesivas o injustas, estas representaciones pueden debilitar la legitimidad del orden social y generar mayores niveles de cuestionamiento político. En este contexto, la participación en acciones colectivas como marchas o protestas puede interpretarse como una forma de expresión de demandas sociales y de disputa simbólica sobre la legitimidad de las estructuras de distribución de recursos en la sociedad @nikolakakis2024.
+
+Asimismo, el análisis de variables sociodemográficas como sexo y edad sugiere que la participación política se encuentra mediada por trayectorias sociales diferenciadas y por procesos de socialización política específicos. Estas diferencias reflejan que la acción colectiva se configura en el cruce entre estructuras sociales, experiencias generacionales y percepciones subjetivas de injusticia.
+
+En conjunto, estos resultados permiten destacar que la percepción de desigualdad económica constituye un elemento clave para comprender las dinámicas de participación política en contextos caracterizados por altos niveles de desigualdad social, como el caso chileno. De este modo, el estudio de las percepciones subjetivas de desigualdad resulta fundamental para analizar los procesos mediante los cuales los individuos interpretan el orden social y desarrollan formas de acción orientadas a cuestionarlo o transformarlo.
